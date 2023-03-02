@@ -1,43 +1,68 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import {addTask} from '../features/tasks/taskSlice'
+import { addTask,editTask } from '../features/tasks/taskSlice'
 import { v4 as uuid } from "uuid";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 
-const TaskForm = () => {  
+const TaskForm = () => {
+  const [task, setTask] = useState({
+    title: "",
+    description: ""
+  })
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const [task, settask] = useState(
-    {
-      title: "",
-      description: ""
-    }
-  )
+  const params = useParams()
+  const tasks = useSelector(state => state.tasks)
+
 
   const handleChange = (e) => {
-    settask({
+    setTask({
       ...task,
       [e.target.name]: e.target.value,
     })
-    console.log(e.target.name, e.target.value);
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    dispatch(addTask({
-      ...task,
-      id: uuid(),
-    }))
+
+    if (params.id) {
+      dispatch(editTask(task))
+    }else{
+      dispatch(addTask({
+        ...task,
+        id: uuid(),
+      }))
+    }
+
+
     navigate("/")
   }
 
+  useEffect(() => {
+    if (params.id) {
+      setTask(tasks.find(task => task.id === params.id))
+        
+    }
+  },[])
   return (
-    <form onSubmit={handleSubmit} >
-      <input name="title" onChange={handleChange} type="text" placeholder="Title" />
-      <textarea name="description" onChange={handleChange} type="text" placeholder="Description"></textarea>
+    <form onSubmit={handleSubmit}>
+      <input
+        name="title"
+        type="text"
+        placeholder="Title"
+        onChange={handleChange}
+        value={task.title}
+      />
+      <textarea
+        name="description"
+        placeholder="Description"
+        onChange={handleChange}
+        value={task.description}
+      ></textarea>
       <button>Save</button>
     </form>
-  )
+  );
 }
 
 export default TaskForm
